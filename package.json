@@ -9,17 +9,17 @@
 	"main": "bin/filesync",
 	"config": {
 		"init-system": "systemd",
-		"port": 2000,
+		"port": 2500,
 		"pam-module": true,
 		"pam-module-name": "http-auth.so"
 	},
 	"engines": {
 		"node": "~0"
 	},
-	"bin": "filesync",
 	"scripts": {
 		"preinstall": "./configure",
-		"install": "./install"
+		"install": "./install",
+		"start": "bin/filesync &"
 	},
 	"dependencies": {
 		"connect": "~1",

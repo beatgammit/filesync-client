@@ -4,7 +4,7 @@
 
 	var connect = require('connect'),
 		argv = require('optimist').argv,
-		port = argv.port || 3000;
+		port = argv.port || process.env.npm_package_config_port || 3000;
 	
 	function route(app) {
 		app.get('/update', function (req, res, next) {

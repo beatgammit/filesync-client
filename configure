@@ -1,0 +1,78 @@
+#!/bin/bash
+
+RET=0
+
+# Make sure compile_pam is set to either true or false
+# Note: the colon is just a command that does nothing. See man :
+: ${compile_pam:=${npm_config_pam_module}}
+: ${compile_pam:=${npm_package_config_pam_module}}
+: ${compile_pam:="false"}
+
+# Make sure we have a module name
+: ${pam_module_name:=${npm_config_pam_module_name}}
+: ${pam_module_name:=${npm_package_config_pam_module_name}}
+: ${pam_module_name:="http-auth.so"}
+
+if [ ${compile_pam} != "false" ]
+then
+	echo "Compiling PAM module:"
+	echo
+	echo
+
+	# ensure that we have all of the necessary libraries
+	echo "Checking for required libraries for PAM module:"
+	while read line;
+	do
+		LIBRARY=`pkg-config --modversion ${line} 2>&-`
+
+		# TODO: figure out minimum versions and do appropriate checks
+		if [ -n "${LIBRARY}" ]
+		then
+			echo "Library found: ${line}"
+		else
+			echo "Library NOT found: ${line}"
+			RET=1
+		fi
+	done < "libs"
+
+	echo
+
+	# check for necessary commands
+	echo "Checking for required commands:"
+	while read line;
+	do 
+		if [ -n "hash ${line} 2>&-" ]
+		then
+			echo "Command found: ${line}"
+		else 
+			echo >&2 "Command NOT found: ${line}"
+			RET=1
+		fi
+	done < "commands"
+
+	if [ ! ${RET} -eq 0 ]
+	then
+		echo "Dependencies not met."
+		echo "Please fix the dependencies or install without the PAM module."
+		exit ${RET}
+	fi
+
+
+# compile PAM module
+	cd lib/pam
+	if make MODULE_NAME=${pam_module_name} 2>ERR 1>/dev/null
+	then
+		echo "PAM module successfully compiled"
+		rm ERR
+	else
+		echo "Error compiling PAM module. Results stored in lib/pam/ERR."
+		RET=1
+#	cat ERR
+#	rm ERR
+	fi
+	cd ../..
+else
+	echo "Not compiling PAM module"
+fi
+
+exit ${RET}

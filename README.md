@@ -30,12 +30,29 @@ The installer can take some command-line parameters. Currently supported paramet
 
 Anything else may have undesired results. I use a couple parameters in development, and these should only be used with extreme care.
 
+To install with parameters, do:
+
+`npm install [parameters]`
+
+So, to change the install port, do:
+
+`npm install --port 4567`
+
+Running
+-------
+
+filesync-client now supports npm start. Just do:
+
+`npm start filesync-client` after npm installing it and the server will be run in the background on whatever port is in the package.json file. This is only really useful for testing purposes right now and there's no way to actually kill the server besides `kill PID`. It's just easier than doing `cd node_modules/filesync-client/bin/ ; ./filesync`.
+
+This method will be obsolete when it's running as a background process, but for now, it's quite convenient. Just take out the & in the package.json if you don't want it to run in the background (even more convenience).
+
 What works
 ----------
 
 The install process for systemd-based systems seems to work. It hasn't been tested for an actual global install, but it seems to work fine with local installs.
 
-`npm install` works except for the node-fs module, which I have patched (not included) and subitted a pull-request for.
+`npm install` works except for the node-fs module, which I have patched (not included) and submitted a pull-request for.
 
 What doesn't work
 -----------------

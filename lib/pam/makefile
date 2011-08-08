@@ -1,10 +1,11 @@
 CFLAGS += -Werror -Wall
-MODULE_NAME="mypam.so"
+OUT_PATH="http-auth.so"
+DIR="./"
 
-all: ${MODULE_NAME}
+all: ${OUT_PATH}
 
 clean:
-	$(RM) $(MODULE_NAME) *.o
+	$(RM) $(OUT_PATH) *.o
 
-${MODULE_NAME}: http-auth.c
+${OUT_PATH}: ${DIR}http-auth.c
 	$(CC) $(CFLAGS) -fPIC -shared -Xlinker -x -o $@ $< -lcurl

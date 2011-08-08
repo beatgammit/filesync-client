@@ -20,10 +20,14 @@ Installing
     cd filesync-client
 	npm install
 
+The install scripts are written in Python. The recommended version is Python 2.7.
+
+The install scripts depend on the module colorama, which can be installed either through easy_install or pip.
+
 The installer can take some command-line parameters. Currently supported parameters are:
 
 * `--pam-module`- if present, compiles and "installs" the http pam module
-* `--pam-module-name name`- the name for the http pam module. Defaults to http-auth.so
+* `--pam-module-path path`- the path for the http pam module, including the name of the module. Defaults to ./http-auth.so
 * `--binroot path/to/dir`- where to install the server
 * `--pam-path path/to/pam/dir`- where to put the pam module
 * `--port 2000`- port of the server

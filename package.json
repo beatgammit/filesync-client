@@ -11,7 +11,7 @@
 		"init-system": "systemd",
 		"port": 2500,
 		"pam-module": true,
-		"pam-module-name": "http-auth.so"
+		"pam-module-path": "./http-auth.so"
 	},
 	"engines": {
 		"node": "~0"

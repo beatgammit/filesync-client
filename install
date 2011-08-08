@@ -1,109 +1,88 @@
-#!/usr/bin/env node
-(function () {
-	'use strict';
+#!/usr/bin/env python
+import os
+from colorama import Fore
 
-	var fs = require('node-fs'),
-		path = require('path'),
-		configFileName = 'config.json',
-		doPam = (process.env.npm_config_pam_module || process.env.npm_package_config_pam_module) === 'true' ? true : false,
-		doGlobal = process.env.npm_config_global === 'true' ? true : false,
-		settings = {
-			'bin': (process.env.npm_config_binroot || doGlobal ? '/usr/local/bin' : './bin'),
-			'etc': (process.env.npm_config_etcroot || doGlobal ? '/etc/filesync' : './etc/filesync'),
-			'lib': (process.env.npm_config_libroot || doGlobal ? '/usr/local/lib/filesync' : './lib/filesync'),
-			'pamPath': process.env.npm_config_pam_path || doGlobal ? '/lib/security' : './lib/security',
-			'pamModuleName': (process.env.npm_config_pam_module_name || process.env.npm_package_config_pam_module_name || 'mypam.so'),
-			'port': +(process.env.npm_config_port || process.env.npm_package_config_port) || 2000,
-			'scriptPath': doGlobal ? '/etc/systemd/system/' : './systemd',
-			'fileName': 'filesync',
-			'configFile': 'config.json'
-		},
-		systemDShell = [
-			'[Unit]',
-			'Description=Syncs files with a server when they change',
-			'Wants=network.target',
-			'After=network.target',
-			'',
-			'[Service]',
-			'ExecStart={bin} --port {port} --config {etc}',
-			'WorkingDirectory={dir}',
-			'Restart=always',
-			'',
-			'[Install]',
-			'WantedBy=multi-user.target'].join('\n');
+doGlobal = False
+if 'npm_config_global' in os.environ:
+	doGlobal = True if os.environ['npm_config_global'] == 'true' else False
 
-	function createSystemD(binaryPath, etcPath, workingDir, writeTo, cb) {
-		var data,
-			systemDFull;
-		
-		cb = (typeof cb === 'function') ? cb : function () {}
+configFileName = 'config.json'
+scriptPath = '/etc/systemd/system' if doGlobal else './systemd'
+fileName = 'filesync'
 
-		systemDFull = path.join(writeTo, 'filesync.service');
+doPam = False
+if 'npm_config_pam_module' in os.environ:
+	doPam = True if os.environ['npm_config_pam_module'] == 'true' else False
+elif 'npm_package_config_pam_module' in os.environ:
+	doPam = True if os.environ['npm_package_config_pam_module'] == 'true' else False
 
-		data = systemDShell.replace('{bin}', binaryPath).replace('{etc}', etcPath).replace('{dir}', workingDir).replace('{port}', settings.port);
+if 'npm_config_binroot' in os.environ:
+	binroot = os.environ['npm_config_binroot']
+else:
+	binroot = '/usr/local/bin' if doGlobal else './bin'
 
-		path.exists(writeTo, function (exists) {
-			try {
-				if (!exists) {
-					fs.mkdirSync(writeTo, parseInt('0755', 8), true);
-				}
-				fs.writeFile(systemDFull, data, 'utf8', function (err) {
-					if (err) {
-						return cb(err);
-					}
-					cb(null, systemDFull);
-				});
-			} catch (e) {
-				cb(e);
-			}
-		});
-	}
+if 'npm_config_etcroot' in os.environ:
+	etcroot = os.environ['npm_config_etcroot']
+else:
+	etcroot = '/etc/filesync' if doGlobal else './etc'
 
-	settings.binPath = path.join(settings.bin, settings.fileName);
-	settings.configPath = path.join(settings.etc, settings.configFile);
+if 'npm_config_libroot' in os.environ:
+	libroot = os.environ['npm_config_libroot']
+else:
+	libroot = '/usr/local/lib/filesync' if doGlobal else './lib'
 
-	createSystemD(settings.binPath, settings.configPath, settings.lib, settings.scriptPath, function (err, scriptPath) {
-		if (err) {
-			console.error('Could not write start script:', err);
-			return;
-		}
-		console.log('A systemD service file has been created for you at:', scriptPath);
-	});
+if 'npm_config_pam_module_path' in os.environ:
+	pamPath = os.environ['npm_config_pam_module_path']
+elif 'npm_package_config_pam_module_path' in os.environ:
+	pamPath = os.environ['npm_package_config_pam_module_path']
+else:
+	pamPath = 'http-auth.so'
+pamModule = os.path.basename(pamPath)
 
-	settings.pamModulePath = path.join('./lib/pam', settings.pamModuleName);
+if 'npm_config_port' in os.environ:
+	port = int(os.environ['npm_config_port'])
+elif 'npm_package_config_port' in os.environ:
+	port = int(os.environ['npm_package_config_port'])
+else:
+	port = 2000
 
-	if (doPam) {
-		path.exists(settings.pamModulePath, function (exists) {
-			var outStream, outPath;
-			if (exists) {
-				try {
-					outPath = path.join(settings.pamPath, settings.pamModuleName);
-					if (!path.existsSync(settings.pamPath)) {
-						fs.mkdirSync(settings.pamPath, parseInt('0755', 8), true);
-					}
 
-					console.log('Out path:', outPath);
-					// copy the file somewhere useful
-					outStream = fs.createWriteStream(outPath);
-					outStream.on('close', function () {
-						console.log('PAM module successfully moved but, for security reasons, is not active');
-						console.log('To activate the module, look for a config file at /etc/pam.d');
-						console.log('This path should lead to either a single file or a directory of config files.');
-						console.log();
-						console.log('Add something like the following:');
-						console.log('\tauth sufficient ' + settings.pamModuleName + ' url=https://localhost:' + settings.port);
-						console.log('\taccount sufficient ' + settings.pamModuleName);
-					});
 
-					console.log('Read path:', settings.pamModulePath);
-					fs.createReadStream(settings.pamModulePath).pipe(outStream);
-				} catch (e) {
-					console.error('Error copying PAM module:', e);
-				}
-				return;
-			}
+systemDShell = '''\
+[Unit]
+Description=Syncs files with a server when they change
+Wants=network.target
+After=network.target
 
-			console.error('PAM module not found. Path used:', settings.pamModulePath);
-		});
-	}
-}());
+[Service]
+ExecStart=%(bin)s --port %(port)d --config %(etc)s
+WorkingDirectory=%(dir)s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target\
+''' % {'bin' : binroot, 'dir' : libroot, 'port' : port, 'etc' : etcroot}
+
+try:
+	if os.path.exists(scriptPath) != True:
+		os.makedirs(scriptPath, 0755)
+
+	systemdPath = os.path.join(scriptPath, 'filesync.service')
+	file = open(systemdPath, 'w')
+	file.write(systemDShell)
+	file.close()
+except IOError as (errno, error):
+	print Fore.RED + 'IO Error: %(errno)s %(error)s' % {'errno' : errno, 'error' : error} + Fore.RESET
+else:
+	print Fore.CYAN + 'Systemd service file created: %s' % systemdPath + Fore.RESET
+
+if doPam == True:
+	print Fore.GREEN + '''
+PAM module saved to: %(path)s.
+For security reasons, the module is not active.
+The module must be activated by editing the PAM config file(s) at /etc/pam.d.
+
+Add something like the following example:
+	auth sufficient %(module)s url=https://localhost:%(port)d
+	account sufficient %(module)s\
+''' % {'port' : port, 'module' : pamModule, 'path' : pamPath} + Fore.RESET

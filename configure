@@ -1,78 +1,64 @@
-#!/bin/bash
+#!/usr/bin/env python
+import os
+import sys
+from scripts.cmd import Command
+from scripts.getEnv import *
+try:
+	from colorama import Fore
+except ImportError:
+	print 'Configure script requires colorama. Please install it:'
+	print 'easy_install colorama'
+	print ''
+	print 'If you do not have easy_install, please install it.'
+	print 'For yum systems:'
+	print '\tyum install python-setuptools'
+	print 'For apt systems:'
+	print '\tapt-get install python-setuptools'
+	sys.exit(1)
 
-RET=0
+compile_pam, pam_module_path = getEnv()
 
-# Make sure compile_pam is set to either true or false
-# Note: the colon is just a command that does nothing. See man :
-: ${compile_pam:=${npm_config_pam_module}}
-: ${compile_pam:=${npm_package_config_pam_module}}
-: ${compile_pam:="false"}
+ret = 0
 
-# Make sure we have a module name
-: ${pam_module_name:=${npm_config_pam_module_name}}
-: ${pam_module_name:=${npm_package_config_pam_module_name}}
-: ${pam_module_name:="http-auth.so"}
+if compile_pam == True:
+	print Fore.CYAN + 'Compiling PAM module:' + Fore.RESET
+	print ''
 
-if [ ${compile_pam} != "false" ]
-then
-	echo "Compiling PAM module:"
-	echo
-	echo
+	print Fore.CYAN + 'Checking for required libraries:' + Fore.RESET
+	for library in open('libs'):
+		library = library.strip()
+		lib = Command('pkg-config --modversion %s' % (library))
+		if lib.returncode == 0:
+			print Fore.GREEN + 'Library found: %s' % (library) + Fore.RESET
+		else:
+			print Fore.RED + 'Library NOT found: %s' % (library) + Fore.RESET
+			ret = 1
 
-	# ensure that we have all of the necessary libraries
-	echo "Checking for required libraries for PAM module:"
-	while read line;
-	do
-		LIBRARY=`pkg-config --modversion ${line} 2>&-`
+	print ''
+	print Fore.CYAN + 'Checking for required commands:' + Fore.RESET
+	for command in open('commands'):
+		command = command.strip()
 
-		# TODO: figure out minimum versions and do appropriate checks
-		if [ -n "${LIBRARY}" ]
-		then
-			echo "Library found: ${line}"
-		else
-			echo "Library NOT found: ${line}"
-			RET=1
-		fi
-	done < "libs"
+		cmd = Command('hash %s' % (command))
+		if cmd.returncode == 0:
+			print Fore.GREEN + 'Command found: %s' % (command) + Fore.RESET
+		else:
+			print Fore.RED + 'Command NOT found: %s' % (command) + Fore.RESET
+			ret = 2
 
-	echo
+	if ret != 0:
+		print Fore.RED + 'Dependencies not met.'
+		print 'Please fix the dependencies or install without the PAM module.' + Fore.RESET
+		sys.exit(ret)
 
-	# check for necessary commands
-	echo "Checking for required commands:"
-	while read line;
-	do 
-		if [ -n "hash ${line} 2>&-" ]
-		then
-			echo "Command found: ${line}"
-		else 
-			echo >&2 "Command NOT found: ${line}"
-			RET=1
-		fi
-	done < "commands"
+	makeCmd = Command('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'lib/pam/', 'name' : pam_module_path})
+	if makeCmd.returncode == 0:
+		print Fore.GREEN + 'PAM module successfully compiled' + Fore.RESET
+	else:
+		print Fore.RED + 'Error compiling PAM module.'
+		print makeCmd.stderr + Fore.RESET
+		ret = 3
+else:
+	print 'Not compiling PAM module'
 
-	if [ ! ${RET} -eq 0 ]
-	then
-		echo "Dependencies not met."
-		echo "Please fix the dependencies or install without the PAM module."
-		exit ${RET}
-	fi
-
-
-# compile PAM module
-	cd lib/pam
-	if make MODULE_NAME=${pam_module_name} 2>ERR 1>/dev/null
-	then
-		echo "PAM module successfully compiled"
-		rm ERR
-	else
-		echo "Error compiling PAM module. Results stored in lib/pam/ERR."
-		RET=1
-#	cat ERR
-#	rm ERR
-	fi
-	cd ../..
-else
-	echo "Not compiling PAM module"
-fi
-
-exit ${RET}
+sys.exit(ret)

@@ -1,0 +1,4 @@
+*.pyc
+systemd/
+node_modules/
+*.so

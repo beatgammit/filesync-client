@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
-from scripts.cmd import Command
-from scripts.getEnv import *
+import subprocess as sp
 try:
 	from colorama import Fore
 except ImportError:
@@ -16,7 +15,16 @@ except ImportError:
 	print '\tapt-get install python-setuptools'
 	sys.exit(1)
 
-compile_pam, pam_module_path = getEnv()
+
+def run_cmd(command, shell=True):
+	process = sp.Popen(command, shell = shell, stdout = sp.PIPE, stderr = sp.PIPE)
+	stdout, stderr = process.communicate()
+	returncode = process.returncode
+	return {'returncode' : returncode, 'stdout' : stdout, 'stderr' : stderr}
+
+
+compile_pam = (os.environ.get('npm_config_pam_module') or os.environ.get('npm_package_config_pam_module')) == 'true' or False
+pam_module_path = os.environ.get('npm_config_pam_module_path') or os.environ.get('npm_package_config_pam_module_path') or 'http-auth.so'
 
 ret = 0
 
@@ -27,8 +35,8 @@ if compile_pam == True:
 	print Fore.CYAN + 'Checking for required libraries:' + Fore.RESET
 	for library in open('libs'):
 		library = library.strip()
-		lib = Command('pkg-config --modversion %s' % (library))
-		if lib.returncode == 0:
+		lib = run_cmd('pkg-config --modversion %s' % (library))
+		if lib['returncode'] == 0:
 			print Fore.GREEN + 'Library found: %s' % (library) + Fore.RESET
 		else:
 			print Fore.RED + 'Library NOT found: %s' % (library) + Fore.RESET
@@ -39,8 +47,8 @@ if compile_pam == True:
 	for command in open('commands'):
 		command = command.strip()
 
-		cmd = Command('hash %s' % (command))
-		if cmd.returncode == 0:
+		cmd = run_cmd('hash %s' % (command))
+		if cmd['returncode'] == 0:
 			print Fore.GREEN + 'Command found: %s' % (command) + Fore.RESET
 		else:
 			print Fore.RED + 'Command NOT found: %s' % (command) + Fore.RESET
@@ -51,8 +59,8 @@ if compile_pam == True:
 		print 'Please fix the dependencies or install without the PAM module.' + Fore.RESET
 		sys.exit(ret)
 
-	makeCmd = Command('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'lib/pam/', 'name' : pam_module_path})
-	if makeCmd.returncode == 0:
+	makeCmd = run_cmd('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'lib/pam/', 'name' : pam_module_path})
+	if makeCmd['returncode'] == 0:
 		print Fore.GREEN + 'PAM module successfully compiled' + Fore.RESET
 	else:
 		print Fore.RED + 'Error compiling PAM module.'

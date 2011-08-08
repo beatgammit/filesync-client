@@ -2,51 +2,23 @@
 import os
 from colorama import Fore
 
-doGlobal = False
-if 'npm_config_global' in os.environ:
-	doGlobal = True if os.environ['npm_config_global'] == 'true' else False
+doGlobal = os.environ.get('npm_config_global') == True or False
 
 configFileName = 'config.json'
 scriptPath = '/etc/systemd/system' if doGlobal else './systemd'
 fileName = 'filesync'
 
 doPam = False
-if 'npm_config_pam_module' in os.environ:
-	doPam = True if os.environ['npm_config_pam_module'] == 'true' else False
-elif 'npm_package_config_pam_module' in os.environ:
-	doPam = True if os.environ['npm_package_config_pam_module'] == 'true' else False
+doPam = (os.environ.get('npm_config_pam_module') or os.environ.get('npm_package_config_pam_module')) == 'true' or False
 
-if 'npm_config_binroot' in os.environ:
-	binroot = os.environ['npm_config_binroot']
-else:
-	binroot = '/usr/local/bin' if doGlobal else './bin'
+binroot = os.environ.get('npm_config_binroot') or '/usr/local/bin' if doGlobal else './bin'
+etcroot = os.environ.get('npm_config_etcroot') or '/etc/filesync' if doGlobal else './etc'
+libroot = os.environ.get('npm_config_libroot') or '/usr/local/lib/filesync' if doGlobal else './lib'
 
-if 'npm_config_etcroot' in os.environ:
-	etcroot = os.environ['npm_config_etcroot']
-else:
-	etcroot = '/etc/filesync' if doGlobal else './etc'
-
-if 'npm_config_libroot' in os.environ:
-	libroot = os.environ['npm_config_libroot']
-else:
-	libroot = '/usr/local/lib/filesync' if doGlobal else './lib'
-
-if 'npm_config_pam_module_path' in os.environ:
-	pamPath = os.environ['npm_config_pam_module_path']
-elif 'npm_package_config_pam_module_path' in os.environ:
-	pamPath = os.environ['npm_package_config_pam_module_path']
-else:
-	pamPath = 'http-auth.so'
+pamPath = os.environ.get('npm_config_pam_module_path') or os.environ.get('npm_package_config_pam_module_path') or 'http-auth.so'
 pamModule = os.path.basename(pamPath)
 
-if 'npm_config_port' in os.environ:
-	port = int(os.environ['npm_config_port'])
-elif 'npm_package_config_port' in os.environ:
-	port = int(os.environ['npm_package_config_port'])
-else:
-	port = 2000
-
-
+port = int(os.environ.get('npm_config_port') or os.environ.get('npm_package_config_port') or 2000)
 
 systemDShell = '''\
 [Unit]
@@ -77,12 +49,12 @@ else:
 	print Fore.CYAN + 'Systemd service file created: %s' % systemdPath + Fore.RESET
 
 if doPam == True:
-	print Fore.GREEN + '''
-PAM module saved to: %(path)s.
-For security reasons, the module is not active.
-The module must be activated by editing the PAM config file(s) at /etc/pam.d.
+	print Fore.CYAN + 'PAM module saved to: %s.' % pamPath + Fore.RESET
+	print '''
+%(color1)sFor security reasons, the module is not active.
+To active the module, edit the PAM config file(s) at /etc/pam.d.
 
-Add something like the following example:
+%(color2)sBelow is a template:%(reset)s%(color3)s
 	auth sufficient %(module)s url=https://localhost:%(port)d
-	account sufficient %(module)s\
-''' % {'port' : port, 'module' : pamModule, 'path' : pamPath} + Fore.RESET
+	account sufficient %(module)s%(reset)s\
+''' % {'port' : port, 'module' : pamModule, 'color1' : Fore.YELLOW, 'color2' : Fore.GREEN, 'color3' : Fore.WHITE, 'reset' : Fore.RESET}

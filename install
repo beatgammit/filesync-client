@@ -2,7 +2,7 @@
 import os
 from colorama import Fore
 
-doGlobal = os.environ.get('npm_config_global') == True or False
+doGlobal = os.environ.get('npm_config_global') == 'true' or False
 
 configFileName = 'config.json'
 scriptPath = '/etc/systemd/system' if doGlobal else './systemd'

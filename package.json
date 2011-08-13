@@ -19,13 +19,15 @@
 	"scripts": {
 		"preinstall": "./configure",
 		"install": "./install",
-		"start": "bin/filesync &"
+		"start": "bin/filesync &",
+		"stop": "curl -X PUT http://localhost:2500/stop"
 	},
 	"dependencies": {
 		"connect": "~1",
 		"tar-async": "~1",
 		"optimist": "~0",
-		"node-fs": "*"
+		"node-fs": "*",
+		"inotify-plusplus": "~1"
 	},
 	"devDependencies": {},
 	"preferGlobal": true

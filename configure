@@ -59,12 +59,12 @@ if compile_pam == True:
 		print 'Please fix the dependencies or install without the PAM module.' + Fore.RESET
 		sys.exit(ret)
 
-	makeCmd = run_cmd('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'lib/pam/', 'name' : pam_module_path})
+	makeCmd = run_cmd('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'src/pam/', 'name' : pam_module_path})
 	if makeCmd['returncode'] == 0:
 		print Fore.GREEN + 'PAM module successfully compiled' + Fore.RESET
 	else:
 		print Fore.RED + 'Error compiling PAM module.'
-		print makeCmd.stderr + Fore.RESET
+		print makeCmd['stderr'] + Fore.RESET
 		ret = 3
 else:
 	print 'Not compiling PAM module'

@@ -24,7 +24,7 @@ def run_cmd(command, shell=True):
 
 
 compile_pam = (os.environ.get('npm_config_pam_module') or os.environ.get('npm_package_config_pam_module')) == 'true' or False
-pam_module_path = os.environ.get('npm_config_pam_module_path') or os.environ.get('npm_package_config_pam_module_path') or 'http-auth.so'
+pam_module_name = os.environ.get('npm_config_pam_module_name') or os.environ.get('npm_package_config_pam_module_name')
 
 ret = 0
 
@@ -59,7 +59,7 @@ if compile_pam == True:
 		print 'Please fix the dependencies or install without the PAM module.' + Fore.RESET
 		sys.exit(ret)
 
-	makeCmd = run_cmd('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'src/pam/', 'name' : pam_module_path})
+	makeCmd = run_cmd('make -f %(dir)smakefile OUT_PATH=%(name)s DIR=%(dir)s' % {'dir' : 'src/pam/', 'name' : pam_module_name})
 	if makeCmd['returncode'] == 0:
 		print Fore.GREEN + 'PAM module successfully compiled' + Fore.RESET
 	else:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import shutil
 from colorama import Fore
 
 doGlobal = os.environ.get('npm_config_global') == 'true' or False
@@ -15,8 +16,11 @@ binroot = os.environ.get('npm_config_binroot') or '/usr/local/bin' if doGlobal e
 etcroot = os.environ.get('npm_config_etcroot') or '/etc/filesync' if doGlobal else './etc'
 libroot = os.environ.get('npm_config_libroot') or '/usr/local/lib/filesync' if doGlobal else './lib'
 
-pamPath = os.environ.get('npm_config_pam_module_path') or os.environ.get('npm_package_config_pam_module_path') or 'http-auth.so'
-pamModule = os.path.basename(pamPath)
+pamModule = os.environ.get('npm_config_pam_module_name') or os.environ.get('npm_package_config_pam_module_name')
+if doGlobal:
+	pamPath = os.environ.get('npm_config_pam_module_path') or '/lib/security'
+else:
+	pamPath = os.environ.get('npm_config_pam_module_path') or os.environ.get('npm_package_config_pam_module_path')
 
 port = int(os.environ.get('npm_config_port') or os.environ.get('npm_package_config_port') or 2000)
 
@@ -43,13 +47,15 @@ try:
 	file = open(systemdPath, 'w')
 	file.write(systemDShell)
 	file.close()
+
+	shutil.move(pamModule, os.path.join(pamPath, pamModule))
 except IOError as (errno, error):
 	print Fore.RED + 'IO Error: %(errno)s %(error)s' % {'errno' : errno, 'error' : error} + Fore.RESET
 else:
 	print Fore.CYAN + 'Systemd service file created: %s' % systemdPath + Fore.RESET
 
 if doPam == True:
-	print Fore.CYAN + 'PAM module saved to: %s.' % pamPath + Fore.RESET
+	print Fore.CYAN + 'PAM module saved to: %s.' % os.path.join(pamPath, pamModule) + Fore.RESET
 	print '''
 %(color1)sFor security reasons, the module is not active.
 To active the module, edit the PAM config file(s) at /etc/pam.d.

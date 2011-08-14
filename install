@@ -56,11 +56,12 @@ else:
 
 if doPam == True:
 	print Fore.CYAN + 'PAM module saved to: %s.' % os.path.join(pamPath, pamModule) + Fore.RESET
-	print '''
-%(color1)sFor security reasons, the module is not active.
+	print '''%(color1)\
+sFor security reasons, the module is not active.
 To active the module, edit the PAM config file(s) at /etc/pam.d.
 
-%(color2)sBelow is a template:%(reset)s%(color3)s
+%(color2)\
+sBelow is a template:%(reset)s%(color3)s
 	auth sufficient %(module)s url=https://localhost:%(port)d
-	account sufficient %(module)s%(reset)s\
-''' % {'port' : port, 'module' : pamModule, 'color1' : Fore.YELLOW, 'color2' : Fore.GREEN, 'color3' : Fore.WHITE, 'reset' : Fore.RESET}
+	account sufficient %(module)s\
+%(reset)s''' % {'port' : port, 'module' : pamModule, 'color1' : Fore.YELLOW, 'color2' : Fore.GREEN, 'color3' : Fore.WHITE, 'reset' : Fore.RESET}

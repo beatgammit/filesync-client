@@ -29,7 +29,8 @@
 		"optimist": "~0",
 		"node-fs": "*",
 		"inotify-plusplus": "~1",
-		"eventhub": "~1"
+		"eventhub": "~1",
+		"npm": "~1"
 	},
 	"devDependencies": {},
 	"preferGlobal": true

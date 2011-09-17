@@ -12,9 +12,9 @@ fileName = 'filesync'
 doPam = False
 doPam = (os.environ.get('npm_config_pam_module') or os.environ.get('npm_package_config_pam_module')) == 'true' or False
 
-binroot = os.environ.get('npm_config_binroot') or '/usr/local/bin' if doGlobal else './bin'
+binroot = os.environ.get('npm_config_binroot') or '/usr/local/bin/filesync' if doGlobal else './bin'
 etcroot = os.environ.get('npm_config_etcroot') or '/etc/filesync' if doGlobal else './etc'
-libroot = os.environ.get('npm_config_libroot') or '/usr/local/lib/filesync' if doGlobal else './lib'
+libroot = os.environ.get('npm_config_libroot') or '/usr/local/lib/node_modules/filesync-client' if doGlobal else './lib'
 
 pamModule = os.environ.get('npm_config_pam_module_name') or os.environ.get('npm_package_config_pam_module_name')
 if doGlobal:

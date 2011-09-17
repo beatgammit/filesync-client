@@ -7,9 +7,12 @@
 		"url": ""
 	},
 	"main": "bin/filesync",
+	"bin": {
+		"filesync": "./bin/filesync"
+	},
 	"config": {
 		"init-system": "systemd",
-		"port": 2500,
+		"port": 3000,
 		"pam-module": true,
 		"pam-module-name": "http-auth.so",
 		"pam-module-path": "."
@@ -21,16 +24,16 @@
 		"preinstall": "./configure",
 		"install": "./install",
 		"start": "bin/filesync &",
-		"stop": "curl -X PUT http://localhost:2500/stop"
+		"stop": "curl -X PUT http://localhost:3000/stop"
 	},
 	"dependencies": {
 		"connect": "~1",
-		"tar-async": "~1",
 		"optimist": "~0",
-		"node-fs": "*",
+		"node-fs": "~0.1",
 		"inotify-plusplus": "~1",
 		"eventhub": "~1",
-		"npm": "~1"
+		"npm": ">= 1.0.30",
+		"redis": "*"
 	},
 	"devDependencies": {},
 	"preferGlobal": true

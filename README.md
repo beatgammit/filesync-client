@@ -78,7 +78,7 @@ What works
 
 The install process for systemd-based systems seems to work. It hasn't been tested for an actual global install, but it seems to work fine with local installs.
 
-Watching files works. For testing, edit bin/filesync and emit an 'addWatches' event with an array of the files/directories to watch. To see output, add a listener on 'newFile', 'fileModified', and 'fileRemoved'. The following use-cases have been tested:
+Watching files works. For testing, edit bin/filesync and emit an 'addWatches' event with an array of the files/directories to watch. To see output, add a listener on 'newWatch', 'fileModified', and 'fileRemoved'. The following use-cases have been tested:
 
 * vim- creates temp files; doesn't modify the original file (uses buffer file)
 * echo- modifies the original file
